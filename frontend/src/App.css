@@ -1,0 +1,9 @@
+body {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+/* Remove estilos antigos do template */
+.App-logo, .App-header, .App-link {
+  display: none !important;
+}
