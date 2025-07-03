@@ -7,6 +7,7 @@ import FinanceiroApagarCadastrar from "./telas/FinanceiroApagarCadastrar";
 import FinanceiroApagarConsultar from "./telas/FinanceiroApagarConsultar";
 import FinanceiroAreceberCadastrar from "./telas/FinanceiroAreceberCadastrar";
 import FinanceiroAreceberConsultar from "./telas/FinanceiroAreceberConsultar";
+import PrincipalDashboard from "./telas/PrincipalDashboard";
 import { FaUserPlus, FaUsers, FaMoneyBillWave, FaSignOutAlt, FaUserFriends, FaChevronRight, FaChevronLeft, FaFileInvoiceDollar, FaSearchDollar, FaRegMoneyBillAlt, FaRegListAlt } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -59,6 +60,15 @@ function Dashboard() {
         </div>
         <hr />
         <ul className="nav nav-pills flex-column mb-auto gap-2">
+          <li>
+            <Link
+              to="/dashboard"
+              className={`nav-link d-flex align-items-center gap-2 ${location.pathname === "/dashboard" ? "active bg-light text-dark shadow-sm" : "text-white"}`}
+              style={{ borderRadius: 8, transition: "all 0.2s", fontWeight: 700, fontSize: 18 }}
+            >
+              <FaUserFriends className="me-2" />{sidebarOpen && "Principal"}
+            </Link>
+          </li>
           <li>
             <span className="nav-link text-white fw-bold small mb-1" style={{ opacity: 0.7 }}>
               <FaUsers className="me-2" />{sidebarOpen && "Parceiros"}
@@ -159,6 +169,7 @@ function Dashboard() {
         </div>
         <div className="p-4 animate__animated animate__fadeIn">
           <Routes>
+            <Route path="/" element={<PrincipalDashboard />} />
             <Route path="/cadastro-parceiro" element={<CadastroParceiro />} />
             <Route path="/consulta-parceiro" element={<ConsultaParceiro />} />
             <Route path="/financeiro-apagar-cadastrar" element={<FinanceiroApagarCadastrar />} />

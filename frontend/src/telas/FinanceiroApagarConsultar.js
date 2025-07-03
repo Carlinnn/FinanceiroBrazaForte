@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc, where } from "firebase/firestore";
 import { app } from "../firebase";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { FaWhatsapp } from "react-icons/fa";
 
 function formatarDataBR(dataISO) {
   if (!dataISO) return "";
@@ -30,11 +31,19 @@ function FinanceiroApagarConsultar() {
   const [showToast, setShowToast] = useState(false);
   const [modal, setModal] = useState({ open: false, conta: null });
   const [baixaLoading, setBaixaLoading] = useState(false);
+  const [parceiros, setParceiros] = useState([]);
 
   const db = getFirestore(app);
 
   useEffect(() => {
     buscarContas();
+    // Buscar parceiros para lookup de telefone
+    async function fetchParceiros() {
+      const parceirosRef = collection(db, "parceiros");
+      const snap = await getDocs(parceirosRef);
+      setParceiros(snap.docs.map(doc => doc.data()));
+    }
+    fetchParceiros();
     // eslint-disable-next-line
   }, []);
 
@@ -68,6 +77,11 @@ function FinanceiroApagarConsultar() {
     c.fornecedor.toLowerCase().includes(busca.toLowerCase()) ||
     c.descricao.toLowerCase().includes(busca.toLowerCase())
   );
+
+  function getTelefoneFornecedor(nome) {
+    const parceiro = parceiros.find(p => p.razaoSocial === nome);
+    return parceiro ? parceiro.telefone : "";
+  }
 
   // Função para dar baixa em uma parcela
   const darBaixaParcela = async (conta, idxParcela) => {
@@ -232,6 +246,20 @@ function FinanceiroApagarConsultar() {
                               <button className="btn btn-success btn-sm" disabled={baixaLoading} onClick={() => darBaixaParcela(modal.conta, idx)}>
                                 Dar baixa
                               </button>
+                            )}
+                            {p.status === "Pago" && modal.conta && (
+                              <a
+                                href={`https://wa.me/55${getTelefoneFornecedor(modal.conta.fornecedor).replace(/\D/g, '')}?text=${encodeURIComponent(
+                                  `Olá, informamos que a parcela nº ${p.numero} da conta a pagar (ID: ${modal.conta.id}) com vencimento em ${formatarDataBR(p.vencimento)} no valor de R$ ${p.valor.toFixed(2)} foi paga com sucesso.`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Avisar fornecedor pelo WhatsApp"
+                                className="ms-2 text-success"
+                                style={{ fontSize: 20 }}
+                              >
+                                <FaWhatsapp />
+                              </a>
                             )}
                           </td>
                         </tr>

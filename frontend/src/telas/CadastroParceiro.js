@@ -3,6 +3,7 @@ import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from
 import { app } from "../firebase";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaRegBuilding, FaIdCard, FaPhoneAlt } from "react-icons/fa";
+import axios from "axios";
 
 function CadastroParceiro() {
   const [cnpj, setCnpj] = useState("");
@@ -11,6 +12,7 @@ function CadastroParceiro() {
   const [message, setMessage] = useState({ type: "", text: "" });
   const [showToast, setShowToast] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [consultandoCnpj, setConsultandoCnpj] = useState(false);
 
   const db = getFirestore(app);
 
@@ -57,6 +59,29 @@ function CadastroParceiro() {
     }
   };
 
+  const handleCnpjBlur = async () => {
+    if (!cnpj || cnpj.length < 14) return;
+    setConsultandoCnpj(true);
+    setMessage({ type: "", text: "" });
+    try {
+      const cnpjLimpo = cnpj.replace(/\D/g, "");
+      const resp = await axios.get(`https://open.cnpja.com/office/${cnpjLimpo}`);
+      if (resp.data && resp.data.company && resp.data.company.name) {
+        setRazaoSocial(resp.data.company.name);
+        if (resp.data.phones && resp.data.phones.length > 0) {
+          setTelefone(`${resp.data.phones[0].area}${resp.data.phones[0].number}`);
+        }
+        setMessage({ type: "success", text: "CNPJ encontrado e dados preenchidos automaticamente." });
+      } else {
+        setMessage({ type: "warning", text: "CNPJ não encontrado. Preencha os dados manualmente." });
+      }
+    } catch (err) {
+      setMessage({ type: "warning", text: "CNPJ não encontrado. Preencha os dados manualmente." });
+    } finally {
+      setConsultandoCnpj(false);
+    }
+  };
+
   return (
     <div className="container py-4">
       {/* Toast de mensagem */}
@@ -99,10 +124,12 @@ function CadastroParceiro() {
                     className="form-control bg-black text-white border-secondary shadow-sm"
                     value={cnpj}
                     onChange={e => setCnpj(e.target.value)}
-                    disabled={loading}
+                    onBlur={handleCnpjBlur}
+                    disabled={loading || consultandoCnpj}
                     placeholder="Digite o CNPJ"
                     maxLength={18}
                   />
+                  {consultandoCnpj && <div className="text-info small mt-1">Consultando CNPJ...</div>}
                 </div>
                 <div className="mb-4">
                   <label className="form-label text-white fw-semibold">

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getFirestore, collection, getDocs, query, orderBy } from "firebase/firestore";
 import { app } from "../firebase";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { FaSearch, FaRegBuilding, FaIdCard, FaPhoneAlt } from "react-icons/fa";
+import { FaSearch, FaRegBuilding, FaIdCard, FaPhoneAlt, FaWhatsapp } from "react-icons/fa";
 
 function ConsultaParceiro() {
   const [parceiros, setParceiros] = useState([]);
@@ -116,7 +116,18 @@ function ConsultaParceiro() {
                       <td><span className="badge bg-light text-dark fs-6 px-3 py-2 shadow-sm">{p.id}</span></td>
                       <td>{p.cnpj}</td>
                       <td>{p.razaoSocial}</td>
-                      <td>{p.telefone}</td>
+                      <td>{p.telefone} {p.telefone && (
+                        <a
+                          href={`https://wa.me/55${p.telefone.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Conversar no WhatsApp"
+                          className="ms-2 text-success"
+                          style={{ fontSize: 20 }}
+                        >
+                          <FaWhatsapp />
+                        </a>
+                      )}</td>
                     </tr>
                   ))}
                 </tbody>
