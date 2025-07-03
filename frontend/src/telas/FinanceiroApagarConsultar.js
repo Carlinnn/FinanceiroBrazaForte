@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getFirestore, collection, getDocs, query, orderBy } from "firebase/firestore";
+import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc, where } from "firebase/firestore";
 import { app } from "../firebase";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -23,6 +23,7 @@ function FinanceiroApagarConsultar() {
   const [message, setMessage] = useState({ type: "", text: "" });
   const [showToast, setShowToast] = useState(false);
   const [modal, setModal] = useState({ open: false, conta: null });
+  const [baixaLoading, setBaixaLoading] = useState(false);
 
   const db = getFirestore(app);
 
@@ -61,6 +62,39 @@ function FinanceiroApagarConsultar() {
     c.fornecedor.toLowerCase().includes(busca.toLowerCase()) ||
     c.descricao.toLowerCase().includes(busca.toLowerCase())
   );
+
+  // Função para dar baixa em uma parcela
+  const darBaixaParcela = async (conta, idxParcela) => {
+    setBaixaLoading(true);
+    try {
+      // Buscar o doc do Firestore pelo id
+      const contasRef = collection(db, "contasApagar");
+      const q = query(contasRef, where("id", "==", conta.id));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        const docRef = doc(db, "contasApagar", snapshot.docs[0].id);
+        const contaFirestore = snapshot.docs[0].data();
+        // Atualizar o status da parcela
+        const novasParcelas = contaFirestore.parcelas.map((p, i) =>
+          i === idxParcela ? { ...p, status: "Pago" } : p
+        );
+        // Se todas as parcelas estiverem pagas, atualizar status geral
+        const statusGeral = novasParcelas.every(p => p.status === "Pago") ? "Pago" : contaFirestore.status;
+        await updateDoc(docRef, {
+          parcelas: novasParcelas,
+          status: statusGeral
+        });
+        // Atualizar na interface
+        setModal(m => ({ ...m, conta: { ...m.conta, parcelas: novasParcelas, status: statusGeral } }));
+        setContas(cs => cs.map(c => c.id === conta.id ? { ...c, parcelas: novasParcelas, status: statusGeral } : c));
+        setMessage({ type: "success", text: "Parcela abatida com sucesso!" });
+      }
+    } catch (err) {
+      setMessage({ type: "danger", text: "Erro ao abater parcela." });
+    } finally {
+      setBaixaLoading(false);
+    }
+  };
 
   return (
     <div className="container py-4">
@@ -177,6 +211,7 @@ function FinanceiroApagarConsultar() {
                         <th>Valor</th>
                         <th>Vencimento</th>
                         <th>Status</th>
+                        <th></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -186,6 +221,13 @@ function FinanceiroApagarConsultar() {
                           <td>R$ {p.valor.toFixed(2)}</td>
                           <td>{p.vencimento}</td>
                           <td><span className={`badge ${p.status === "Pendente" ? "bg-warning text-dark" : p.status === "Pago" ? "bg-success" : "bg-danger"}`}>{p.status}</span></td>
+                          <td>
+                            {p.status !== "Pago" && (
+                              <button className="btn btn-success btn-sm" disabled={baixaLoading} onClick={() => darBaixaParcela(modal.conta, idx)}>
+                                Dar baixa
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
