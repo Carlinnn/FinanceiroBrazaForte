@@ -17,12 +17,12 @@ function baixarCSV(parcelas, conta) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `conta_apagar_${conta.id}_parcelas.csv`;
+  a.download = `conta_areceber_${conta.id}_parcelas.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
-function FinanceiroApagarConsultar() {
+function FinanceiroAreceberConsultar() {
   const [contas, setContas] = useState([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
@@ -49,7 +49,7 @@ function FinanceiroApagarConsultar() {
   const buscarContas = async () => {
     setLoading(true);
     try {
-      const contasRef = collection(db, "contasApagar");
+      const contasRef = collection(db, "contasAreceber");
       const q = query(contasRef, orderBy("id", "asc"));
       const snapshot = await getDocs(q);
       const lista = snapshot.docs.map(doc => doc.data());
@@ -65,7 +65,7 @@ function FinanceiroApagarConsultar() {
   };
 
   const contasFiltradas = contas.filter(c =>
-    c.fornecedor.toLowerCase().includes(busca.toLowerCase()) ||
+    c.cliente.toLowerCase().includes(busca.toLowerCase()) ||
     c.descricao.toLowerCase().includes(busca.toLowerCase())
   );
 
@@ -74,18 +74,18 @@ function FinanceiroApagarConsultar() {
     setBaixaLoading(true);
     try {
       // Buscar o doc do Firestore pelo id
-      const contasRef = collection(db, "contasApagar");
+      const contasRef = collection(db, "contasAreceber");
       const q = query(contasRef, where("id", "==", conta.id));
       const snapshot = await getDocs(q);
       if (!snapshot.empty) {
-        const docRef = doc(db, "contasApagar", snapshot.docs[0].id);
+        const docRef = doc(db, "contasAreceber", snapshot.docs[0].id);
         const contaFirestore = snapshot.docs[0].data();
         // Atualizar o status da parcela
         const novasParcelas = contaFirestore.parcelas.map((p, i) =>
-          i === idxParcela ? { ...p, status: "Pago" } : p
+          i === idxParcela ? { ...p, status: "Recebido" } : p
         );
-        // Se todas as parcelas estiverem pagas, atualizar status geral
-        const statusGeral = novasParcelas.every(p => p.status === "Pago") ? "Pago" : contaFirestore.status;
+        // Se todas as parcelas estiverem recebidas, atualizar status geral
+        const statusGeral = novasParcelas.every(p => p.status === "Recebido") ? "Recebido" : contaFirestore.status;
         await updateDoc(docRef, {
           parcelas: novasParcelas,
           status: statusGeral
@@ -93,10 +93,10 @@ function FinanceiroApagarConsultar() {
         // Atualizar na interface
         setModal(m => ({ ...m, conta: { ...m.conta, parcelas: novasParcelas, status: statusGeral } }));
         setContas(cs => cs.map(c => c.id === conta.id ? { ...c, parcelas: novasParcelas, status: statusGeral } : c));
-        setMessage({ type: "success", text: "Parcela abatida com sucesso!" });
+        setMessage({ type: "success", text: "Parcela recebida com sucesso!" });
       }
     } catch (err) {
-      setMessage({ type: "danger", text: "Erro ao abater parcela." });
+      setMessage({ type: "danger", text: "Erro ao receber parcela." });
     } finally {
       setBaixaLoading(false);
     }
@@ -116,13 +116,13 @@ function FinanceiroApagarConsultar() {
       <div className="card bg-dark text-white shadow-lg border-0 animate__animated animate__fadeInUp">
         <div className="card-body p-5">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-            <h3 className="text-white fw-bold text-uppercase letter-spacing-1 mb-0">Consulta de Contas a Pagar</h3>
+            <h3 className="text-white fw-bold text-uppercase letter-spacing-1 mb-0">Consulta de Contas a Receber</h3>
             <div className="input-group" style={{ maxWidth: 320 }}>
               <span className="input-group-text bg-black text-white border-secondary">🔎</span>
               <input
                 type="text"
                 className="form-control bg-black text-white border-secondary shadow-sm"
-                placeholder="Buscar por Fornecedor ou Descrição"
+                placeholder="Buscar por Cliente ou Descrição"
                 value={busca}
                 onChange={e => setBusca(e.target.value)}
                 disabled={loading}
@@ -142,7 +142,7 @@ function FinanceiroApagarConsultar() {
                 <thead className="table-secondary text-dark">
                   <tr>
                     <th>ID</th>
-                    <th>Fornecedor</th>
+                    <th>Cliente</th>
                     <th>Valor Total</th>
                     <th>1º Vencimento</th>
                     <th>Situação</th>
@@ -153,11 +153,11 @@ function FinanceiroApagarConsultar() {
                   {contasFiltradas.map((c, idx) => (
                     <tr key={c.id || idx} className="align-middle">
                       <td>{c.id}</td>
-                      <td>{c.fornecedor}</td>
+                      <td>{c.cliente}</td>
                       <td>R$ {c.valor.toFixed(2)}</td>
                       <td>{formatarDataBR(c.dataVencimento)}</td>
                       <td>
-                        <span className={`badge ${c.status === "Pendente" ? "bg-warning text-dark" : c.status === "Pago" ? "bg-success" : "bg-danger"}`}>{c.status}</span>
+                        <span className={`badge ${c.status === "Pendente" ? "bg-warning text-dark" : c.status === "Recebido" ? "bg-success" : "bg-danger"}`}>{c.status}</span>
                       </td>
                       <td>
                         <button className="btn btn-outline-light btn-sm" onClick={() => setModal({ open: true, conta: c })}>Detalhes</button>
@@ -176,13 +176,13 @@ function FinanceiroApagarConsultar() {
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content bg-dark text-white">
               <div className="modal-header border-secondary">
-                <h5 className="modal-title">Detalhes da Conta a Pagar #{modal.conta.id}</h5>
+                <h5 className="modal-title">Detalhes da Conta a Receber #{modal.conta.id}</h5>
                 <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setModal({ open: false, conta: null })}></button>
               </div>
               <div className="modal-body">
                 <div className="row mb-3">
                   <div className="col-md-6 mb-2">
-                    <strong>Fornecedor:</strong> {modal.conta.fornecedor}
+                    <strong>Cliente:</strong> {modal.conta.cliente}
                   </div>
                   <div className="col-md-6 mb-2">
                     <strong>Descrição:</strong> {modal.conta.descricao}
@@ -191,7 +191,7 @@ function FinanceiroApagarConsultar() {
                     <strong>Valor Total:</strong> R$ {modal.conta.valor.toFixed(2)}
                   </div>
                   <div className="col-md-4 mb-2">
-                    <strong>Pagamento:</strong> {modal.conta.formaPagamento}
+                    <strong>Recebimento:</strong> {modal.conta.formaRecebimento}
                   </div>
                   <div className="col-md-4 mb-2">
                     <strong>Parcelas:</strong> {modal.conta.numParcelas}
@@ -200,7 +200,7 @@ function FinanceiroApagarConsultar() {
                     <strong>1º Vencimento:</strong> {formatarDataBR(modal.conta.dataVencimento)}
                   </div>
                   <div className="col-md-6 mb-2">
-                    <strong>Status:</strong> <span className={`badge ${modal.conta.status === "Pendente" ? "bg-warning text-dark" : modal.conta.status === "Pago" ? "bg-success" : "bg-danger"}`}>{modal.conta.status}</span>
+                    <strong>Status:</strong> <span className={`badge ${modal.conta.status === "Pendente" ? "bg-warning text-dark" : modal.conta.status === "Recebido" ? "bg-success" : "bg-danger"}`}>{modal.conta.status}</span>
                   </div>
                   {modal.conta.observacoes && (
                     <div className="col-12 mb-2">
@@ -226,9 +226,9 @@ function FinanceiroApagarConsultar() {
                           <td>{p.numero}</td>
                           <td>R$ {p.valor.toFixed(2)}</td>
                           <td>{formatarDataBR(p.vencimento)}</td>
-                          <td><span className={`badge ${p.status === "Pendente" ? "bg-warning text-dark" : p.status === "Pago" ? "bg-success" : "bg-danger"}`}>{p.status}</span></td>
+                          <td><span className={`badge ${p.status === "Pendente" ? "bg-warning text-dark" : p.status === "Recebido" ? "bg-success" : "bg-danger"}`}>{p.status}</span></td>
                           <td>
-                            {p.status !== "Pago" && (
+                            {p.status !== "Recebido" && (
                               <button className="btn btn-success btn-sm" disabled={baixaLoading} onClick={() => darBaixaParcela(modal.conta, idx)}>
                                 Dar baixa
                               </button>
@@ -252,4 +252,4 @@ function FinanceiroApagarConsultar() {
   );
 }
 
-export default FinanceiroApagarConsultar; 
+export default FinanceiroAreceberConsultar; 

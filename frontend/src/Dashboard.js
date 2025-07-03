@@ -5,7 +5,9 @@ import CadastroParceiro from "./telas/CadastroParceiro";
 import ConsultaParceiro from "./telas/ConsultaParceiro";
 import FinanceiroApagarCadastrar from "./telas/FinanceiroApagarCadastrar";
 import FinanceiroApagarConsultar from "./telas/FinanceiroApagarConsultar";
-import { FaUserPlus, FaUsers, FaMoneyBillWave, FaSignOutAlt, FaUserFriends, FaChevronRight, FaChevronLeft, FaFileInvoiceDollar, FaSearchDollar } from "react-icons/fa";
+import FinanceiroAreceberCadastrar from "./telas/FinanceiroAreceberCadastrar";
+import FinanceiroAreceberConsultar from "./telas/FinanceiroAreceberConsultar";
+import { FaUserPlus, FaUsers, FaMoneyBillWave, FaSignOutAlt, FaUserFriends, FaChevronRight, FaChevronLeft, FaFileInvoiceDollar, FaSearchDollar, FaRegMoneyBillAlt, FaRegListAlt } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 function Dashboard() {
@@ -23,6 +25,10 @@ function Dashboard() {
     ? "financeiro-apagar-cadastrar"
     : location.pathname.includes("financeiro-apagar-consultar")
     ? "financeiro-apagar-consultar"
+    : location.pathname.includes("financeiro-areceber-cadastrar")
+    ? "financeiro-areceber-cadastrar"
+    : location.pathname.includes("financeiro-areceber-consultar")
+    ? "financeiro-areceber-consultar"
     : "";
 
   const handleLogout = async () => {
@@ -105,14 +111,26 @@ function Dashboard() {
           </li>
           <li className="mt-3">
             <span className="nav-link text-white fw-bold small mb-1" style={{ opacity: 0.7 }}>
-              <FaMoneyBillWave className="me-2" />{sidebarOpen && "Financeiro A Receber"}
+              <FaRegMoneyBillAlt className="me-2" />{sidebarOpen && "Financeiro A Receber"}
             </span>
             <ul className="nav flex-column ms-1 gap-1">
               <li>
-                <a href="#" className="nav-link d-flex align-items-center gap-2 text-white" style={{ borderRadius: 8 }}><FaUserPlus />{sidebarOpen && "Cadastrar"}</a>
+                <Link
+                  to="/dashboard/financeiro-areceber-cadastrar"
+                  className={`nav-link d-flex align-items-center gap-2 ${active === "financeiro-areceber-cadastrar" ? "active bg-light text-dark shadow-sm" : "text-white"}`}
+                  style={{ borderRadius: 8, transition: "all 0.2s" }}
+                >
+                  <FaFileInvoiceDollar />{sidebarOpen && "Cadastrar"}
+                </Link>
               </li>
               <li>
-                <a href="#" className="nav-link d-flex align-items-center gap-2 text-white" style={{ borderRadius: 8 }}><FaUsers />{sidebarOpen && "Consultar"}</a>
+                <Link
+                  to="/dashboard/financeiro-areceber-consultar"
+                  className={`nav-link d-flex align-items-center gap-2 ${active === "financeiro-areceber-consultar" ? "active bg-light text-dark shadow-sm" : "text-white"}`}
+                  style={{ borderRadius: 8, transition: "all 0.2s" }}
+                >
+                  <FaRegListAlt />{sidebarOpen && "Consultar"}
+                </Link>
               </li>
             </ul>
           </li>
@@ -134,6 +152,8 @@ function Dashboard() {
             {active === "consulta-parceiro" && "Consulta de Parceiros"}
             {active === "financeiro-apagar-cadastrar" && "Cadastro de Conta a Pagar"}
             {active === "financeiro-apagar-consultar" && "Consulta de Contas a Pagar"}
+            {active === "financeiro-areceber-cadastrar" && "Cadastro de Conta a Receber"}
+            {active === "financeiro-areceber-consultar" && "Consulta de Contas a Receber"}
             {!active && "Dashboard"}
           </h4>
         </div>
@@ -143,6 +163,8 @@ function Dashboard() {
             <Route path="/consulta-parceiro" element={<ConsultaParceiro />} />
             <Route path="/financeiro-apagar-cadastrar" element={<FinanceiroApagarCadastrar />} />
             <Route path="/financeiro-apagar-consultar" element={<FinanceiroApagarConsultar />} />
+            <Route path="/financeiro-areceber-cadastrar" element={<FinanceiroAreceberCadastrar />} />
+            <Route path="/financeiro-areceber-consultar" element={<FinanceiroAreceberConsultar />} />
             {/* Outras rotas do dashboard podem ser adicionadas aqui */}
           </Routes>
         </div>
