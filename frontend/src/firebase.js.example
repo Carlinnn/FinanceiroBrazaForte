@@ -1,0 +1,20 @@
+// Importa as funções necessárias do SDK do Firebase
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+
+// Configuração do Firebase do projeto
+const firebaseConfig = {
+  apiKey: "suainfo",
+  authDomain: "suainfo",
+  projectId: "suainfo",
+  storageBucket: "suainfo",
+  messagingSenderId: "suainfo",
+  appId: "suainfo",
+  measurementId: "suainfo"
+};
+
+// Inicializa o Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+export { app, analytics }; 
